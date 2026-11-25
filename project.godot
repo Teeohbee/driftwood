@@ -1,0 +1,38 @@
+; Engine configuration file.
+
+config_version=5
+
+[application]
+
+config/name="Driftwood"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.16, 0.13, 0.1, 1)
+boot_splash/show_image=false
+run/main_scene="res://scenes/title/title_screen.tscn"
+
+[autoload]
+
+GameInput="*res://core/game_input.gd"
+ScreenFader="*res://core/screen_fader.gd"
+
+[display]
+
+window/size/viewport_width=256
+window/size/viewport_height=144
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/scale_mode="integer"
+
+[editor]
+
+export/convert_text_resources_to_binary=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_clear_color=Color(0.16, 0.13, 0.1, 1)
