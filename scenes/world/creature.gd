@@ -213,7 +213,7 @@ func think_chaser(delta: float) -> void:
 ## The guardian sidles to line up with you, then charges. Hitting a wall stuns
 ## it, and only a stunned guardian can be hurt. Light makes it flinch.
 func think_guardian(delta: float) -> void:
-	if player == null:
+	if player == null or not is_in_players_room():
 		return
 	state_timer -= delta
 	var to_player := player.exact_position - exact_position
@@ -244,6 +244,12 @@ func think_guardian(delta: float) -> void:
 			if state_timer <= 0.0:
 				state = "sidle"
 				state_timer = 1.5
+
+
+## Cave rooms are 16x8 metatiles; the guardian only wakes in your room.
+func is_in_players_room() -> bool:
+	var room_size := Vector2(256, 128)
+	return (exact_position / room_size).floor() == ((player.exact_position - Vector2(0, 4)) / room_size).floor()
 
 
 func is_vulnerable() -> bool:
