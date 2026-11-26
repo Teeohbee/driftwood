@@ -20,6 +20,10 @@ func _ready() -> void:
 		effect_players.append(player)
 	music_player = AudioStreamPlayer.new()
 	add_child(music_player)
+	# Loops by replaying, so it works however the importer treats loop points.
+	music_player.finished.connect(func() -> void:
+		if current_music != "":
+			music_player.play())
 	refresh_volumes()
 
 
