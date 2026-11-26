@@ -108,7 +108,8 @@ func make_object_sprite(object_name: String) -> Sprite2D:
 	sprite.texture = texture
 	sprite.hframes = frame_count
 	sprite.centered = false
-	sprite.offset = Vector2(-8, -texture.get_height())
+	var frame_width := texture.get_width() / frame_count
+	sprite.offset = Vector2(-frame_width / 2, -texture.get_height())
 	return sprite
 
 

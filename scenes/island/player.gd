@@ -24,6 +24,8 @@ var facing := Vector2i.DOWN
 var is_walking := false
 var walk_frame_timer := 0.0
 var sprite: Sprite2D
+## Skin, shirt and hair choices from the look picker.
+var look := CastawayLook.default_look()
 
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	sprite.centered = false
 	sprite.offset = Vector2(-8, -16)
 	sprite.hframes = 2
+	sprite.material = CastawayLook.make_material(look)
 	add_child(sprite)
 	exact_position = position
 	show_facing()
