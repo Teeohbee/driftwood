@@ -10,7 +10,7 @@ extends Node
 
 ## A script error skips the checks after it instead of failing them,
 ## so the run also fails unless every check reported in.
-const EXPECTED_CHECK_COUNT := 74
+const EXPECTED_CHECK_COUNT := 79
 const TEST_SAVE_FOLDER := "user://test_saves"
 
 var failures: Array[String] = []
@@ -45,6 +45,11 @@ func run_all_checks() -> void:
 	await check_farming()
 	await check_combat_and_guardian()
 	await check_raft()
+	for ending_id in Endings.ENDING_IDS:
+		Endings.pending_ending = ending_id
+		await check_scene_runs("res://scenes/ending/ending.tscn", "the %s ending" % ending_id)
+	Endings.pending_ending = ""
+	await check_stay_offer()
 	await check_radio_ending_flags()
 
 	if checks_reported != EXPECTED_CHECK_COUNT:
@@ -557,6 +562,24 @@ func check_raft() -> void:
 	world.player.face_towards(Vector2.LEFT)
 	world.check_raft_landing()
 	expect(not save.flag("on_raft"), "stepping onto the islet's sand leaves the raft")
+	free_world(world)
+	await get_tree().process_frame
+
+
+func check_stay_offer() -> void:
+	var world := await new_world()
+	var save := world.save
+	save.clock.total_minutes = float((Endings.STAY_EARLIEST_DAY - 1) * DayClock.MINUTES_PER_DAY + 7 * 60)
+	save.home = {"map": "overworld", "x": 40, "y": 36}
+	world.player.place_at(Vector2(40 * 16 + 8, 36 * 16 + 14))
+	var comfy_pieces := ["bed", "workbench", "chest", "table", "rug", "lamp"]
+	for piece_index in comfy_pieces.size():
+		var cell := Vector2i(38 + piece_index, 34)
+		save.set_state("overworld", cell, "piece", comfy_pieces[piece_index])
+		world.add_thing(comfy_pieces[piece_index], cell)
+	Endings.check_stay_offer(world)
+	expect(world.dialogue_box.is_open and world.dialogue_box.choices == ["STAY", "NOT YET"], "after a year in a comfy home, you are offered to stay")
+	world.dialogue_box.close_box()
 	free_world(world)
 	await get_tree().process_frame
 

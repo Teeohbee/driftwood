@@ -41,6 +41,12 @@ var look := CastawayLook.default_look()
 
 
 func _ready() -> void:
+	# Added first so it draws underneath the castaway.
+	raft_sprite = Sprite2D.new()
+	raft_sprite.texture = preload("res://art/sprites/raft.png")
+	raft_sprite.position = Vector2(0, -2)
+	raft_sprite.visible = false
+	add_child(raft_sprite)
 	sprite = Sprite2D.new()
 	sprite.centered = false
 	sprite.offset = Vector2(-8, -16)
@@ -50,12 +56,6 @@ func _ready() -> void:
 	swing_sprite = Sprite2D.new()
 	swing_sprite.visible = false
 	add_child(swing_sprite)
-	raft_sprite = Sprite2D.new()
-	raft_sprite.texture = preload("res://art/sprites/raft.png")
-	raft_sprite.position = Vector2(0, -2)
-	raft_sprite.z_index = -1
-	raft_sprite.visible = false
-	add_child(raft_sprite)
 	held_sprite = Sprite2D.new()
 	held_sprite.visible = false
 	held_sprite.position = Vector2(0, -26)

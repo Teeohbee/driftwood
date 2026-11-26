@@ -11,6 +11,8 @@ const BOX := Rect2(8, 88, 240, 40)
 const CHARACTERS_PER_SECOND := 40.0
 const LINES_PER_PAGE := 2
 
+## The button press that opened this must not also act inside it.
+var opened_on_frame := -1
 var pages: Array = []
 var page_index := 0
 var visible_character_count := 0.0
@@ -25,6 +27,7 @@ var blip_timer := 0.0
 
 
 func show_lines(lines: Array) -> void:
+	opened_on_frame = Engine.get_process_frames()
 	pages.clear()
 	for first_line in range(0, lines.size(), LINES_PER_PAGE):
 		pages.append(lines.slice(first_line, first_line + LINES_PER_PAGE))
@@ -87,7 +90,8 @@ func _process(delta: float) -> void:
 		if vertical != 0:
 			choice_index = wrapi(choice_index + vertical, 0, choices.size())
 			Sound.play("menu_move")
-	if Input.is_action_just_pressed("action_a") or (Input.is_action_just_pressed("action_b") and choices.is_empty()):
+	var is_new_this_frame := Engine.get_process_frames() == opened_on_frame
+	if not is_new_this_frame and (Input.is_action_just_pressed("action_a") or (Input.is_action_just_pressed("action_b") and choices.is_empty())):
 		advance()
 	queue_redraw()
 
