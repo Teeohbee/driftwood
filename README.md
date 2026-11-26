@@ -38,5 +38,5 @@ godot --headless --path . --import                    # let Godot import new PNG
 ## Test
 
 ```sh
-godot --headless --path . -s tests/smoke_test.gd
+godot --headless --path . tests/smoke_test.tscn
 ```
