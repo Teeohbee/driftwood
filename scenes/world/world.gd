@@ -381,6 +381,16 @@ func build_interface() -> void:
 
 func set_mode(new_mode: Mode) -> void:
 	mode = new_mode
+	# Creatures freeze whenever you are not free to move, so nothing bites
+	# you while you read or rummage in your bag.
+	var creatures_move := mode == Mode.PLAY or mode == Mode.FISHING
+	for creature in creatures:
+		if is_instance_valid(creature):
+			creature.set_process(creatures_move)
+	# Menus stop the whole world, fires and all, like a paused Game Boy.
+	if world_objects != null:
+		var is_menu := mode == Mode.MENU or mode == Mode.CHEST
+		world_objects.process_mode = Node.PROCESS_MODE_DISABLED if is_menu else Node.PROCESS_MODE_INHERIT
 
 
 func say(lines: Array, on_closed := Callable()) -> void:

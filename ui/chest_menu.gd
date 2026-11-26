@@ -9,6 +9,8 @@ signal closed
 const CHEST_SLOTS := 16
 const COLUMNS := 8
 
+## The button press that opened this must not also act inside it.
+var opened_on_frame := -1
 var save: SaveGame
 var chest_map := ""
 var chest_cell := Vector2i.ZERO
@@ -17,6 +19,7 @@ var seconds_open := 0.0
 
 
 func open(owner_save: SaveGame, on_map: String, cell: Vector2i) -> void:
+	opened_on_frame = Engine.get_process_frames()
 	save = owner_save
 	chest_map = on_map
 	chest_cell = cell
@@ -38,6 +41,8 @@ func _process(delta: float) -> void:
 		return
 	seconds_open += delta
 	queue_redraw()
+	if Engine.get_process_frames() == opened_on_frame:
+		return
 	if Input.is_action_just_pressed("action_b") or Input.is_action_just_pressed("start"):
 		visible = false
 		closed.emit()

@@ -25,6 +25,8 @@ const ITEM_ACTIONS := ["USE", "SET ON A", "SET ON B", "DROP"]
 const SYSTEM_ACTIONS := ["SAVE AND QUIT", "SETTINGS", "QUIT, NO SAVE", "BACK"]
 const BOOK_ROWS_SHOWN := 5
 
+## The button press that opened this must not also act inside it.
+var opened_on_frame := -1
 var save: SaveGame
 var map_view_data := {}
 var tab_index := 0
@@ -44,6 +46,7 @@ var player_cell := Vector2i.ZERO
 
 
 func open(tab_name := "ITEMS") -> void:
+	opened_on_frame = Engine.get_process_frames()
 	tab_index = TABS.find(tab_name)
 	is_on_tab_row = false
 	grid_index = 0
@@ -65,6 +68,8 @@ func _process(delta: float) -> void:
 		return
 	seconds_open += delta
 	queue_redraw()
+	if Engine.get_process_frames() == opened_on_frame:
+		return
 	if Input.is_action_just_pressed("start"):
 		close()
 		return

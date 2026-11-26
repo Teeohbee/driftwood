@@ -7,11 +7,14 @@ signal closed
 
 const ROWS := ["WINDOW SCALE", "FULLSCREEN", "MUSIC", "SOUNDS", "LCD EFFECT", "DONE"]
 
+## The button press that opened this must not also act inside it.
+var opened_on_frame := -1
 var row_index := 0
 var seconds_open := 0.0
 
 
 func open() -> void:
+	opened_on_frame = Engine.get_process_frames()
 	row_index = 0
 	visible = true
 
@@ -21,6 +24,8 @@ func _process(delta: float) -> void:
 		return
 	seconds_open += delta
 	queue_redraw()
+	if Engine.get_process_frames() == opened_on_frame:
+		return
 	var horizontal := int(Input.is_action_just_pressed("move_right")) - int(Input.is_action_just_pressed("move_left"))
 	var vertical := int(Input.is_action_just_pressed("move_down")) - int(Input.is_action_just_pressed("move_up"))
 	if vertical != 0:
