@@ -31,12 +31,13 @@ Look-book art is drawn as text in `art_source/` so every pixel shows in a diff.
 
 ```sh
 godot --headless --path . -s tools/bake_art.gd        # text -> art/*.png, then palette check
-godot --headless --path . -s tools/make_look_book.gd  # mockups -> build/look_book/
-godot --headless --path . --import                    # let Godot import new PNGs
+godot --headless --path . -s tools/bake_audio.gd      # synthesise sounds and music -> audio/
+godot --headless --path . -s tools/preview_art.gd     # every sprite on one sheet -> build/art_sheet.png
+godot --headless --path . --import                    # let Godot import new files
 ```
 
 ## Test
 
 ```sh
-godot --headless --path . -s tests/smoke_test.gd
+godot --headless --path . tests/smoke_test.tscn
 ```

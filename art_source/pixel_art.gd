@@ -12,6 +12,34 @@ extends RefCounted
 
 const METATILE_SIZE := 16
 
+## Every sprite from every art file, by name.
+static var sprites_by_name := {}
+
+
+static func sprite(sprite_name: String) -> Dictionary:
+	return all_sprites()[sprite_name]
+
+
+static func all_sprites() -> Dictionary:
+	if sprites_by_name.is_empty():
+		for sprite_table in [SPRITES, ItemArt.SPRITES, ThingArt.SPRITES, CreatureArt.SPRITES, BuildArt.SPRITES]:
+			for sprite_name in sprite_table:
+				assert(not sprites_by_name.has(sprite_name), "sprite %s is defined twice" % sprite_name)
+				sprites_by_name[sprite_name] = sprite_table[sprite_name]
+	return sprites_by_name
+
+
+## The beach tiles here, then the rest of the island from TerrainArt.
+static func ground_tile_order() -> Array:
+	return GROUND_TILE_ORDER + TerrainArt.TILE_ORDER
+
+
+static func ground_tile(tile_name: String) -> Dictionary:
+	if GROUND_TILES.has(tile_name):
+		return GROUND_TILES[tile_name]
+	return TerrainArt.TILES[tile_name]
+
+
 ## Ground tiles, baked left to right into art/tiles/ground_atlas.png.
 ## A tile followed by "_frame_2" is the second animation frame of the tile before it.
 const GROUND_TILE_ORDER := [

@@ -78,8 +78,12 @@ static func palette_contains_all(palette_colors: Dictionary, colors_in_cell: Dic
 static func palettes_as_color_sets(kind: String) -> Dictionary:
 	var color_sets := {}
 	if kind == "background":
-		for palette_name in Palettes.BACKGROUND_PALETTES:
-			color_sets[palette_name] = five_bit_set(Palettes.background_colors(palette_name))
+		var all_palettes := Palettes.all_background_palettes()
+		for palette_name in all_palettes:
+			var colors: Array[Color] = []
+			for channels in all_palettes[palette_name]:
+				colors.append(Palettes.five_bit_to_color(channels))
+			color_sets[palette_name] = five_bit_set(colors)
 	else:
 		for palette_name in Palettes.SPRITE_PALETTES:
 			color_sets[palette_name] = five_bit_set(Palettes.sprite_colors(palette_name))

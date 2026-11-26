@@ -11,10 +11,12 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute("res://art/sprites")
 
 	save("res://art/backgrounds/ground_atlas.png", ArtPainter.ground_atlas_image())
+	for season in Palettes.SEASONS:
+		save("res://art/backgrounds/ground_atlas_%s.png" % season, ArtPainter.ground_atlas_image(season))
 	save("res://art/backgrounds/title_background_1.png", ArtPainter.title_background_image(0))
 	save("res://art/backgrounds/title_background_2.png", ArtPainter.title_background_image(1))
 
-	for sprite_name in PixelArt.SPRITES:
+	for sprite_name in PixelArt.all_sprites():
 		save("res://art/sprites/%s.png" % sprite_name, ArtPainter.sprite_sheet_image(sprite_name))
 	save("res://art/sprites/font.png", ArtPainter.font_atlas_image())
 	save("res://art/sprites/icons.png", ArtPainter.icon_atlas_image())

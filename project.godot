@@ -13,6 +13,10 @@ run/main_scene="res://scenes/title/title_screen.tscn"
 [autoload]
 
 GameInput="*res://core/game_input.gd"
+Game="*res://core/game.gd"
+Settings="*res://core/settings.gd"
+Sound="*res://core/sound.gd"
+LcdEffect="*res://core/lcd_effect.gd"
 ScreenFader="*res://core/screen_fader.gd"
 
 [display]
