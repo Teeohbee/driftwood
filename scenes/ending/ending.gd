@@ -37,6 +37,8 @@ func _ready() -> void:
 	dialogue_box = DialogueBox.new()
 	add_child(dialogue_box)
 	dialogue_box.visible = false
+	# The story sits at the top so the scene below stays in view.
+	dialogue_box.position = Vector2(0, -80)
 	castaway = Sprite2D.new()
 	castaway.texture = preload("res://art/sprites/hero_down.png")
 	castaway.hframes = 2
@@ -76,7 +78,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	draw_texture(BACKGROUND_FRAMES[int(seconds / 0.6) % 2], Vector2.ZERO)
 	draw_ending_props()
-	if stage == Stage.SCENE or stage == Stage.STORY:
+	if stage == Stage.SCENE:
 		var title: String = STORIES[ending_id]["title"]
 		PixelFont.draw_outlined_text(self, title, Vector2((256 - PixelFont.text_width(title)) / 2, 8), Palettes.sprite_color("logo", 1), UiDraw.ink())
 	if stage == Stage.CREDITS:

@@ -547,7 +547,7 @@ func process_companion(delta: float) -> void:
 func update_night() -> void:
 	var darkness := 0.0
 	if WorldMaps.map_data(map_id)["is_dark"]:
-		darkness = 0.95
+		darkness = 1.0
 	else:
 		darkness = NightOverlay.DARKNESS_FOR_STEP[save.clock.darkness_step()]
 		if save.clock.weather() == "storm" and darkness < 0.3:

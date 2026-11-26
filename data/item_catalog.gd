@@ -145,8 +145,15 @@ static func cooks_into(item_id: String) -> String:
 	return item(item_id).get("cooks_into", "")
 
 
+## Textures are kept here: menus draw them in _draw(), which holds no
+## reference, so an uncached texture would be freed before it is rendered.
+static var textures_by_item := {}
+
+
 static func texture(item_id: String) -> Texture2D:
-	return load("res://art/sprites/%s.png" % sprite_for(item_id))
+	if not textures_by_item.has(item_id):
+		textures_by_item[item_id] = load("res://art/sprites/%s.png" % sprite_for(item_id))
+	return textures_by_item[item_id]
 
 
 ## Roasted mushrooms reuse the roast fruit picture; everything else has its own.

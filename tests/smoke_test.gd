@@ -10,7 +10,7 @@ extends Node
 
 ## A script error skips the checks after it instead of failing them,
 ## so the run also fails unless every check reported in.
-const EXPECTED_CHECK_COUNT := 62
+const EXPECTED_CHECK_COUNT := 66
 const TEST_SAVE_FOLDER := "user://test_saves"
 
 var failures: Array[String] = []
@@ -35,6 +35,7 @@ func run_all_checks() -> void:
 	check_meters()
 	check_map_gates()
 	check_save_round_trip()
+	check_every_ending_can_be_reached()
 	await check_scene_runs("res://scenes/title/title_screen.tscn", "title screen")
 	await check_scene_runs("res://scenes/save_select/save_select.tscn", "save select")
 	await check_world_walks_and_gathers()
@@ -213,6 +214,96 @@ func reachable_cells(closed_kinds: Array) -> Dictionary:
 			if not is_closed:
 				todo.append(next)
 	return seen
+
+
+## Works out everything a player could ever get, starting empty-handed on the
+## beach: what they can reach depends on their tools, and new tools come from
+## what they can reach. Then checks each ending's needs are in that set.
+func check_every_ending_can_be_reached() -> void:
+	var have := obtainable_items()
+	expect(have.has("stone_axe") and have.has("stone_pick") and have.has("torch"), "first tools can be made from the beach and jungle")
+	expect(have.has("claw_pick") and have.has("copper"), "the guardian's claw leads to copper")
+	expect(have.has("wire") and have.has("battery"), "the radio parts can be made")
+	var beacon_ok := ["wood", "hardwood", "resin"].all(func(item_id: String) -> bool: return have.has(item_id))
+	var boat_ok := ["hardwood", "rope", "cloth", "copper"].all(func(item_id: String) -> bool: return have.has(item_id))
+	expect(beacon_ok and boat_ok and have.has("fibre") and have.has("leaf"), "the beacon, the sailboat and a bed can be built")
+
+
+func obtainable_items() -> Dictionary:
+	var have := {}
+	var changed := true
+	while changed:
+		changed = false
+		var closed := []
+		if not has_tool(have, "knife", 1):
+			closed.append("vines")
+		if not has_tool(have, "pick", 1):
+			closed.append("boulder")
+		if not has_tool(have, "pick", 2):
+			closed.append("great_boulder")
+		var reachable := reachable_cells(closed)
+		var gains := []
+		var can_raft := have.has("driftwood") and have.has("rope")
+		for map_id in ["overworld", "cave"]:
+			var is_cave: bool = map_id == "cave"
+			if is_cave and not have.has("torch"):
+				continue
+			for row in WorldMaps.height_of(map_id):
+				for column in WorldMaps.width_of(map_id):
+					var cell := Vector2i(column, row)
+					var on_islet: bool = map_id == "overworld" and column >= 64
+					if map_id == "overworld" and not reachable.has(cell) and not (on_islet and can_raft):
+						continue
+					gains.append_array(gains_from_thing(WorldMaps.thing_at(map_id, cell), have))
+					var creature := WorldMaps.creature_at(map_id, cell)
+					if creature != "":
+						gains.append_array(Creature.CREATURES[creature]["drops"].keys())
+					if WorldMaps.thing_at(map_id, cell) == "crate":
+						gains.append_array(WorldMaps.map_data(map_id)["crates"].get(cell, []))
+		if have.has("coconut_cup"):
+			gains.append_array(["cup_water", "cup_seawater"])
+		if have.has("pearl"):
+			for reward in Hermit.PEARL_REWARDS:
+				gains.append(reward[0])
+		if have.has("copper_ore") and have.has("clay") and have.has("stone"):
+			gains.append("copper")
+		for item_id in have.keys():
+			if ItemCatalog.cooks_into(item_id) != "":
+				gains.append(ItemCatalog.cooks_into(item_id))
+		for recipe in RecipeBook.RECIPES:
+			if recipe["ingredients"].all(func(item_id: String) -> bool: return have.has(item_id)):
+				gains.append(recipe["result"])
+				if recipe.has("leaves"):
+					gains.append(recipe["leaves"])
+		for item_id in gains:
+			if not have.has(item_id):
+				have[item_id] = true
+				changed = true
+	return have
+
+
+func has_tool(have: Dictionary, kind: String, tier: int) -> bool:
+	for item_id in have:
+		if ItemCatalog.tool_kind(item_id) == kind and ItemCatalog.tool_tier(item_id) >= tier:
+			return true
+	return false
+
+
+func gains_from_thing(kind: String, have: Dictionary) -> Array:
+	if kind == "":
+		return []
+	var info := ThingCatalog.thing(kind)
+	var gains := []
+	if info.has("pickup"):
+		gains.append(info["pickup"]["item"])
+	if info.has("harvest"):
+		gains.append(info["harvest"]["item"])
+		gains.append(info["harvest"].get("otherwise", info["harvest"]["item"]))
+	for action in ThingCatalog.tool_actions(kind):
+		if has_tool(have, action["kind"], action["tier"]):
+			gains.append_array(action["gives"].keys())
+			gains.append_array(action.get("bonus", {}).keys())
+	return gains
 
 
 func check_save_round_trip() -> void:
