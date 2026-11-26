@@ -30,6 +30,7 @@ var walk_frame_timer := 0.0
 var sprite: Sprite2D
 var swing_sprite: Sprite2D
 var held_sprite: Sprite2D
+var raft_sprite: Sprite2D
 var swing_timer := 0.0
 var hurt_timer := 0.0
 var knockback := Vector2.ZERO
@@ -49,6 +50,12 @@ func _ready() -> void:
 	swing_sprite = Sprite2D.new()
 	swing_sprite.visible = false
 	add_child(swing_sprite)
+	raft_sprite = Sprite2D.new()
+	raft_sprite.texture = preload("res://art/sprites/raft.png")
+	raft_sprite.position = Vector2(0, -2)
+	raft_sprite.z_index = -1
+	raft_sprite.visible = false
+	add_child(raft_sprite)
 	held_sprite = Sprite2D.new()
 	held_sprite.visible = false
 	held_sprite.position = Vector2(0, -26)

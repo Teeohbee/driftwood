@@ -10,7 +10,7 @@ extends Node
 
 ## A script error skips the checks after it instead of failing them,
 ## so the run also fails unless every check reported in.
-const EXPECTED_CHECK_COUNT := 71
+const EXPECTED_CHECK_COUNT := 74
 const TEST_SAVE_FOLDER := "user://test_saves"
 
 var failures: Array[String] = []
@@ -44,6 +44,7 @@ func run_all_checks() -> void:
 	await check_building_and_comfort()
 	await check_farming()
 	await check_combat_and_guardian()
+	await check_raft()
 	await check_radio_ending_flags()
 
 	if checks_reported != EXPECTED_CHECK_COUNT:
@@ -537,6 +538,25 @@ func check_combat_and_guardian() -> void:
 	expect(guardian.health == 24, "a stunned guardian takes damage")
 	world.interactions.defeat_creature(guardian)
 	expect(world.save.flag("guardian_defeated"), "beating the guardian is remembered")
+	free_world(world)
+	await get_tree().process_frame
+
+
+func check_raft() -> void:
+	var world := await new_world()
+	var save := world.save
+	save.inventory.add("driftwood", 4)
+	save.inventory.add("rope", 2)
+	var water_cell := Vector2i(64, 30)
+	world.player.place_at(Vector2(63 * 16 + 8, 30 * 16 + 14))
+	expect(Building.placement_problem(world, "raft", water_cell) == "", "a raft can be built on the sea by the east shore")
+	Building.place(world, "raft", water_cell)
+	world.interactions.board_raft(world.things_by_cell[water_cell])
+	expect(save.flag("on_raft") and not world.is_cell_blocked(Vector2i(65, 30)), "aboard the raft, the sea is open")
+	world.player.place_at(Vector2(69 * 16 + 8, 18 * 16 + 14))
+	world.player.face_towards(Vector2.LEFT)
+	world.check_raft_landing()
+	expect(not save.flag("on_raft"), "stepping onto the islet's sand leaves the raft")
 	free_world(world)
 	await get_tree().process_frame
 

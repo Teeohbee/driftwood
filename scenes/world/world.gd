@@ -425,6 +425,7 @@ func _process(delta: float) -> void:
 			advance_time(delta)
 		Mode.ROOM_SLIDE, Mode.MENU, Mode.SLEEPING, Mode.CHEST, Mode.CUTSCENE:
 			pass
+	player.raft_sprite.visible = save.flag("on_raft")
 	update_night()
 	update_roof_visibility()
 	update_visited_screen()
@@ -669,7 +670,6 @@ func check_raft_landing() -> void:
 	var ground_here := ground_name_at(player.cell())
 	if not WATER_GROUND.has(ground_here):
 		save.set_flag("on_raft", false)
-		player.sprite.offset = Vector2(-8, -16)
 		toast("YOU STEP ASHORE.")
 		if things_by_cell.has(player.cell()):
 			return
