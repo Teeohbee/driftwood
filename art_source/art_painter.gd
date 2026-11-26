@@ -13,13 +13,13 @@ const LOGO_SCALE := 3
 
 # --- Text grids -------------------------------------------------------------
 
-static func ground_tile_image(tile_name: String) -> Image:
+static func ground_tile_image(tile_name: String, season := "spring") -> Image:
 	var base_name := tile_name.trim_suffix("_frame_2")
-	var tile: Dictionary = PixelArt.GROUND_TILES[base_name]
+	var tile: Dictionary = PixelArt.ground_tile(base_name)
 	var rows: Array = tile["rows"]
 	if tile_name.ends_with("_frame_2"):
 		rows = second_frame_rows_for(base_name, rows)
-	var colors := Palettes.background_colors(tile["palette"])
+	var colors := Palettes.background_colors(tile["palette"], season)
 	return image_from_rows(tile_name, rows, func(character: String, _row: int) -> Color:
 		return colors[int(character)]
 	)
@@ -27,9 +27,9 @@ static func ground_tile_image(tile_name: String) -> Image:
 
 ## Water ripples drift sideways; on the shore only the foam line moves.
 static func second_frame_rows_for(base_name: String, rows: Array) -> Array:
-	if base_name == "water":
+	if base_name == "water" or base_name == "river":
 		return rows_shifted_right(rows, 3, 0, rows.size() - 1)
-	if base_name == "shore":
+	if base_name == "shore" or base_name == "pale_shore":
 		return rows_shifted_right(rows, 2, 5, 9)
 	return rows
 
@@ -44,14 +44,39 @@ static func rows_shifted_right(rows: Array, distance: int, first_row: int, last_
 	return shifted_rows
 
 
+## Characters 1-3 are colours from "palette"; 4-6 are colours 1-3 from
+## "palette_2". The checker still makes sure each 8x8 cell uses only one.
 static func sprite_frame_image(sprite_name: String, frame_index: int) -> Image:
-	var sprite: Dictionary = PixelArt.SPRITES[sprite_name]
-	var rows: Array = sprite["frames"][frame_index]
+	var sprite: Dictionary = PixelArt.sprite(sprite_name)
+	var rows := padded_rows(sprite["frames"][frame_index])
 	return image_from_rows(sprite_name, rows, func(character: String, row: int) -> Color:
 		if character == ".":
 			return Color(0, 0, 0, 0)
-		return Palettes.sprite_color(sprite_palette_for_row(sprite, row), int(character))
+		var colour_number := int(character)
+		if colour_number >= 4:
+			return Palettes.sprite_color(sprite["palette_2"], colour_number - 3)
+		return Palettes.sprite_color(sprite_palette_for_row(sprite, row), colour_number)
 	)
+
+
+## Small sprites may be drawn smaller than their box. They are padded to the
+## next 16 or 32 pixels: centred across, standing on the bottom edge.
+static func padded_rows(rows: Array) -> Array:
+	var width: int = rows[0].length()
+	var height: int = rows.size()
+	var box_width := 16 if width <= 16 else 32
+	var box_height := 16 if height <= 16 else 32
+	if width == box_width and height == box_height:
+		return rows
+	var left_padding := (box_width - width) / 2
+	var right_padding := box_width - width - left_padding
+	var padded := []
+	for blank_row in box_height - height:
+		padded.append(".".repeat(box_width))
+	for row in rows:
+		assert(row.length() == width, "rows in one frame must share a width")
+		padded.append(".".repeat(left_padding) + row + ".".repeat(right_padding))
+	return padded
 
 
 static func sprite_palette_for_row(sprite: Dictionary, row: int) -> String:
@@ -61,7 +86,7 @@ static func sprite_palette_for_row(sprite: Dictionary, row: int) -> String:
 
 
 static func sprite_sheet_image(sprite_name: String) -> Image:
-	var frames: Array = PixelArt.SPRITES[sprite_name]["frames"]
+	var frames: Array = PixelArt.sprite(sprite_name)["frames"]
 	var first_frame := sprite_frame_image(sprite_name, 0)
 	var sheet := Image.create_empty(first_frame.get_width() * frames.size(), first_frame.get_height(), false, Image.FORMAT_RGBA8)
 	for frame_index in frames.size():
@@ -84,11 +109,12 @@ static func image_from_rows(art_name: String, rows: Array, color_for_character: 
 
 # --- Atlases ----------------------------------------------------------------
 
-static func ground_atlas_image() -> Image:
+static func ground_atlas_image(season := "spring") -> Image:
 	var tile_size := PixelArt.METATILE_SIZE
-	var atlas := Image.create_empty(tile_size * PixelArt.GROUND_TILE_ORDER.size(), tile_size, false, Image.FORMAT_RGBA8)
-	for tile_index in PixelArt.GROUND_TILE_ORDER.size():
-		var tile_image := ground_tile_image(PixelArt.GROUND_TILE_ORDER[tile_index])
+	var tile_order := PixelArt.ground_tile_order()
+	var atlas := Image.create_empty(tile_size * tile_order.size(), tile_size, false, Image.FORMAT_RGBA8)
+	for tile_index in tile_order.size():
+		var tile_image := ground_tile_image(tile_order[tile_index], season)
 		atlas.blit_rect(tile_image, Rect2i(0, 0, tile_size, tile_size), Vector2i(tile_index * tile_size, 0))
 	return atlas
 
