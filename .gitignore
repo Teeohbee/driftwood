@@ -1,4 +1,3 @@
 .godot/
-*.import
 /build/
 .DS_Store
