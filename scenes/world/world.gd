@@ -475,6 +475,7 @@ func advance_time(delta: float) -> void:
 
 
 func on_new_hour() -> void:
+	douse_fires_in_rain()
 	refresh_thing_looks()
 	weather_overlay.weather = save.clock.weather() if not WorldMaps.map_data(map_id)["is_dark"] else "clear"
 	interactions.wear_torch_in_darkness()
@@ -488,6 +489,7 @@ func on_new_day() -> void:
 	if not rotted.is_empty():
 		toast("SOME FOOD WENT BAD.")
 	Farming.new_day(save, self)
+	regrow_things()
 	if save.clock.season() != season_seen:
 		season_seen = save.clock.season()
 		ground.tile_set = make_ground_tile_set(season_seen)
@@ -495,6 +497,34 @@ func on_new_day() -> void:
 		apply_season_to_things()
 		show_season_card()
 	refresh_thing_looks()
+
+
+## Picked and chopped things come back on their regrow day, even if you
+## never left the map.
+func regrow_things() -> void:
+	var today := save.clock.day()
+	for cell in save.cells_with(map_id, "gone"):
+		var regrow_day := int(save.state_at(map_id, cell)["gone"])
+		if regrow_day == 0 or today < regrow_day or things_by_cell.has(cell):
+			continue
+		save.set_state(map_id, cell, "gone", null)
+		var kind := WorldMaps.thing_at(map_id, cell)
+		if kind != "":
+			add_thing(kind, cell).apply_season(save.clock.season())
+
+
+## Rain puts out any fire without a roof over it.
+func douse_fires_in_rain() -> void:
+	if not save.clock.is_raining() or WorldMaps.map_data(map_id)["is_dark"]:
+		return
+	var doused := false
+	for cell in things_by_cell:
+		if things_by_cell[cell].kind == "campfire" and is_fire_lit(cell) and not roofs_by_cell.has(cell):
+			save.set_state(map_id, cell, "burns_until", save.clock.total_minutes)
+			doused = true
+	if doused:
+		toast("THE RAIN PUT OUT A FIRE.")
+		hint_once("rain_fire", ["THE RAIN HISSES ON THE EMBERS.", "A ROOF OVER A FIRE KEEPS IT", "BURNING IN BAD WEATHER."])
 
 
 func show_season_card() -> void:

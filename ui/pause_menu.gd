@@ -198,11 +198,16 @@ func pick_for_merge(slot_index: int) -> void:
 	message = ""
 
 
+## Merge recipes found so far (cooking discoveries are kept separately).
+func known_merges() -> Array:
+	return save.known_recipes.filter(func(key: String) -> bool: return not key.begins_with("cook:"))
+
+
 func handle_book(vertical: int, pressed_b: bool) -> void:
 	if vertical < 0 and book_scroll == 0:
 		is_on_tab_row = true
 	elif vertical != 0:
-		book_scroll = clampi(book_scroll + vertical, 0, maxi(save.known_recipes.size() - BOOK_ROWS_SHOWN, 0))
+		book_scroll = clampi(book_scroll + vertical, 0, maxi(known_merges().size() - BOOK_ROWS_SHOWN, 0))
 	if pressed_b:
 		close()
 
@@ -350,15 +355,16 @@ func draw_merge_tray() -> void:
 
 func draw_book() -> void:
 	var total := RecipeBook.RECIPES.size()
-	UiDraw.text(self, "FOUND %d OF %d MERGES" % [save.known_recipes.size(), total], Vector2(8, 20), UiDraw.dim())
-	if save.known_recipes.is_empty():
+	var merges := known_merges()
+	UiDraw.text(self, "FOUND %d OF %d MERGES" % [merges.size(), total], Vector2(8, 20), UiDraw.dim())
+	if merges.is_empty():
 		UiDraw.text(self, "NOTHING YET. TRY MERGING!", Vector2(8, 40))
 		return
 	for row in BOOK_ROWS_SHOWN:
 		var recipe_index := book_scroll + row
-		if recipe_index >= save.known_recipes.size():
+		if recipe_index >= merges.size():
 			break
-		var recipe := recipe_by_key(save.known_recipes[recipe_index])
+		var recipe := recipe_by_key(merges[recipe_index])
 		if recipe.is_empty():
 			continue
 		var top := 32.0 + row * 20
@@ -371,7 +377,7 @@ func draw_book() -> void:
 			left += 8
 		UiDraw.item_icon(self, recipe["result"], Vector2(left, top), recipe.get("count", 1))
 		UiDraw.text(self, ItemCatalog.display_name(recipe["result"]), Vector2(left + 20, top + 4))
-	if save.known_recipes.size() > BOOK_ROWS_SHOWN:
+	if merges.size() > BOOK_ROWS_SHOWN:
 		UiDraw.text(self, "UP/DOWN TO SCROLL", Vector2(8, 134), UiDraw.dim())
 
 
@@ -421,7 +427,7 @@ func draw_system() -> void:
 	UiDraw.text(self, "YEAR %d   DAY %d OF %d   %s" % [clock.year(), clock.day_of_season(), DayClock.DAYS_PER_SEASON, clock.time_text()], Vector2(8, 32), UiDraw.dim())
 	var seconds := int(save.play_seconds)
 	UiDraw.text(self, "PLAYED %d:%02d" % [seconds / 3600, (seconds / 60) % 60], Vector2(8, 42), UiDraw.dim())
-	UiDraw.text(self, "MERGES %d/%d   ENDINGS %d/4" % [save.known_recipes.size(), RecipeBook.RECIPES.size(), Game.endings_seen.size()], Vector2(8, 52), UiDraw.dim())
+	UiDraw.text(self, "MERGES %d/%d   ENDINGS %d/4" % [known_merges().size(), RecipeBook.RECIPES.size(), Game.endings_seen.size()], Vector2(8, 52), UiDraw.dim())
 	for index in SYSTEM_ACTIONS.size():
 		var top := 70.0 + index * 12
 		UiDraw.text(self, SYSTEM_ACTIONS[index], Vector2(24, top))

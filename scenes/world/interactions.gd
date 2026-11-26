@@ -292,7 +292,9 @@ func bare_hands_on_thing(thing: WorldThing) -> void:
 					if answer == 0:
 						world.sleep(true))
 			else:
-				world.say(["IT IS TOO EARLY TO SLEEP."])
+				var comfort := Building.comfort_around(world, thing.cell)
+				var shelter := "UNDER A ROOF" if world.roofs_by_cell.has(world.player.cell()) else "NO ROOF OVER YOU"
+				world.say(["IT IS TOO EARLY TO SLEEP.", "COMFORT HERE: %d. %s." % [comfort, shelter]])
 			return
 		"door":
 			var is_open: bool = state.get("open", false)

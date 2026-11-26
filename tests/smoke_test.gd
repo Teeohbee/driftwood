@@ -10,7 +10,7 @@ extends Node
 
 ## A script error skips the checks after it instead of failing them,
 ## so the run also fails unless every check reported in.
-const EXPECTED_CHECK_COUNT := 66
+const EXPECTED_CHECK_COUNT := 68
 const TEST_SAVE_FOLDER := "user://test_saves"
 
 var failures: Array[String] = []
@@ -454,10 +454,31 @@ func check_building_and_comfort() -> void:
 	expect(save.inventory.count_of("wood") == 6 and world.things_by_cell.has(near), "building spends materials and places the piece")
 	Building.place(world, "bed", Vector2i(40, 37))
 	expect(Building.comfort_around(world, Vector2i(40, 37)) == 2, "comfort counts the bed and workbench")
+	var stick_cell := Vector2i(26, 36)
+	save.set_state("overworld", stick_cell, "gone", save.clock.day() + 1)
+	world.remove_thing_node(stick_cell)
+	save.clock.sleep_until_morning()
+	world.on_new_day()
+	expect(world.things_by_cell.has(stick_cell), "a picked stick grows back the next morning")
+	var fire_cell := Vector2i(43, 36)
+	save.inventory.add("stick", 2)
+	Building.place(world, "campfire", fire_cell)
+	save.clock.weather_seed = find_rainy_seed(save.clock.day())
+	world.douse_fires_in_rain()
+	expect(not world.is_fire_lit(fire_cell), "rain puts out a fire with no roof")
 	var taken := Building.dismantle(world, near)
 	expect(taken == "workbench" and save.inventory.count_of("wood") >= 2, "taking down gives half the cost back")
 	free_world(world)
 	await get_tree().process_frame
+
+
+func find_rainy_seed(day_number: int) -> int:
+	var clock := DayClock.new()
+	for seed in range(1, 500):
+		clock.weather_seed = seed
+		if clock.weather_on(day_number) == "rain":
+			return seed
+	return 1
 
 
 func check_farming() -> void:
