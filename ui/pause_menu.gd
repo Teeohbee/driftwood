@@ -426,7 +426,7 @@ func draw_system() -> void:
 	UiDraw.text(self, "DAY %d   %s   %s" % [clock.day(), clock.season().to_upper(), clock.weather().to_upper()], Vector2(8, 22))
 	UiDraw.text(self, "YEAR %d   DAY %d OF %d   %s" % [clock.year(), clock.day_of_season(), DayClock.DAYS_PER_SEASON, clock.time_text()], Vector2(8, 32), UiDraw.dim())
 	var seconds := int(save.play_seconds)
-	UiDraw.text(self, "PLAYED %d:%02d" % [seconds / 3600, (seconds / 60) % 60], Vector2(8, 42), UiDraw.dim())
+	UiDraw.text(self, "TOMORROW: %s   PLAYED %d:%02d" % [clock.weather_on(clock.day() + 1).to_upper(), seconds / 3600, (seconds / 60) % 60], Vector2(8, 42), UiDraw.dim())
 	UiDraw.text(self, "MERGES %d/%d   ENDINGS %d/4" % [known_merges().size(), RecipeBook.RECIPES.size(), Game.endings_seen.size()], Vector2(8, 52), UiDraw.dim())
 	for index in SYSTEM_ACTIONS.size():
 		var top := 70.0 + index * 12

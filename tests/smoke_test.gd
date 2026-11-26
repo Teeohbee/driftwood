@@ -10,7 +10,7 @@ extends Node
 
 ## A script error skips the checks after it instead of failing them,
 ## so the run also fails unless every check reported in.
-const EXPECTED_CHECK_COUNT := 68
+const EXPECTED_CHECK_COUNT := 71
 const TEST_SAVE_FOLDER := "user://test_saves"
 
 var failures: Array[String] = []
@@ -499,6 +499,24 @@ func check_farming() -> void:
 	expect(Farming.is_ripe(save.state_at("overworld", plot)["crop"]), "watered every day, a crop ripens")
 	Farming.use_on_plot(world, "", plot)
 	expect(save.inventory.count_of("yam") == 2, "spring seeds grow yams")
+	save.clock.total_minutes += DayClock.MINUTES_PER_DAY * 14
+	save.inventory.add("seeds")
+	Farming.use_on_ground(world, "seeds", plot)
+	expect(save.state_at("overworld", plot)["crop"]["kind"] == "squash", "autumn seeds grow squash")
+
+	var hen := world.add_creature("hen", Vector2i(30, 36))
+	hen.player = world.player
+	save.inventory.add("seeds", 2)
+	world.interactions.feed_creature("seeds", hen)
+	world.dialogue_box.close_box()
+	world.interactions.feed_creature("seeds", hen)
+	world.dialogue_box.close_box()
+	expect(hen.is_tamed and save.animals[hen.id()]["tamed"], "two handfuls of seeds tame a hen")
+	save.home = {"map": "overworld", "x": 40, "y": 36}
+	Farming.give_animal_gifts(save, world)
+	var gift_cell := world.free_cell_near(Vector2i(40, 37))
+	var gifts: Array = save.state_at("overworld", gift_cell).get("items", [])
+	expect(gifts.any(func(entry: Dictionary) -> bool: return entry["id"] == "egg"), "a tamed hen lays an egg by your bed each morning")
 	free_world(world)
 	await get_tree().process_frame
 
