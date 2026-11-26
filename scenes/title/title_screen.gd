@@ -8,7 +8,8 @@ const BACKGROUND_FRAMES := [
 	preload("res://art/backgrounds/title_background_2.png"),
 ]
 const LOGO_TEXTURE := preload("res://art/sprites/logo.png")
-const BEACH_SCENE := "res://scenes/island/island.tscn"
+const SHELL_TEXTURE := preload("res://art/sprites/shell.png")
+const SAVE_SELECT_SCENE := "res://scenes/save_select/save_select.tscn"
 const LOGO_RESTING_Y := 14
 const PROMPT_TEXT := "PRESS START"
 const PROMPT_TOP := 112
@@ -41,6 +42,7 @@ func _ready() -> void:
 	var drop := create_tween()
 	drop.tween_property(logo, "position:y", LOGO_RESTING_Y, 0.9).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	drop.tween_callback(func() -> void: enter_stage(Stage.WAITING_FOR_START))
+	Sound.play_music("title")
 
 
 func _process(delta: float) -> void:
@@ -54,7 +56,8 @@ func _process(delta: float) -> void:
 		skip_logo_drop()
 	elif start_pressed and stage == Stage.WAITING_FOR_START:
 		enter_stage(Stage.STARTING)
-		get_tree().create_timer(0.6).timeout.connect(func() -> void: ScreenFader.change_scene(BEACH_SCENE))
+		Sound.play("start")
+		get_tree().create_timer(0.6).timeout.connect(func() -> void: ScreenFader.change_scene(SAVE_SELECT_SCENE))
 	queue_redraw()
 
 
@@ -84,6 +87,16 @@ func _draw() -> void:
 		PixelFont.draw_outlined_text(self, PROMPT_TEXT, Vector2(left, PROMPT_TOP), Palettes.sprite_color("ink", 1), Palettes.sprite_color("ink", 3))
 	var credit := "A HOMAGE TO 1999"
 	PixelFont.draw_text(self, credit, Vector2((256 - PixelFont.text_width(credit)) / 2, 132), Palettes.sprite_color("ink", 1))
+	draw_endings_found()
+
+
+## One shell per ending found, bottom right, like a trophy shelf.
+func draw_endings_found() -> void:
+	for ending_index in Endings.ENDING_IDS.size():
+		var is_found := Game.endings_seen.has(Endings.ENDING_IDS[ending_index])
+		var top_left := Vector2(200 + ending_index * 12, 128)
+		if is_found:
+			draw_texture_rect_region(SHELL_TEXTURE, Rect2(top_left, Vector2(12, 12)), Rect2(2, 4, 12, 12))
 
 
 func is_prompt_visible() -> bool:
